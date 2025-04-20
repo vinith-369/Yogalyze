@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Flow Trainer</title>
+    <style>
+        :root {
+            --primary: #7C9D96;
+            --secondary: #E9B384;
+            --accent: #A1CCD1;
+            --background: #F4F2DE;
+            --text: #2C3639;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px; /* Increased from 1400px */
+            margin: 0 auto;
+            padding: 1.5rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 60% 40%; /* Adjusted ratio to give more space to video */
+            gap: 2rem;
+            flex: 1;
+            min-height: 0; /* Important for proper scaling */
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-section {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 150px); /* Increased height */
+        }
+
+        #video-feed {
+            width: 100%;
+            height: 100%;
+            border-radius: 0.5rem;
+            object-fit: contain; /* Changed to contain to prevent stretching */
+            max-height: 100%;
+        }
+
+        .pose-info {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: calc(100vh - 150px); /* Match video section height */
+        }
+
+        .pose-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .pose-image {
+            width: 200px; /* Increased from 120px */
+            height: 200px; /* Increased from 120px */
+            object-fit: cover;
+            border-radius: 1rem;
+            background: var(--accent);
+        }
+
+        .pose-details {
+            flex: 1;
+        }
+
+        .pose-details h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .timer {
+            font-size: 3rem; /* Increased from 2rem */
+            color: var(--secondary);
+            font-weight: bold;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 1.5rem; /* Increased from 1rem */
+            background: var(--background);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .completed-poses {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .pose-chip {
+            background: var(--accent);
+            color: var(--text);
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 1rem;
+        }
+
+        .pose-description {
+            background: var(--background);
+            padding: 1.5rem;
+            border-radius: 0.8rem;
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            margin-top: 0.8rem;
+        }
+
+        .status.active {
+            background: #a8e6cf;
+            color: #1b4332;
+        }
+
+        .status.paused {
+            background: #ffd3b6;
+            color: #7f4f24;
+        }
+
+        /* Progress text styling */
+        .progress-section p {
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Yoga Flow Trainer</h1>
+            <p>Follow the poses and maintain them for the required duration</p>
+        </header>
+
+        <main class="main-content">
+            <section class="video-section">
+                <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Live video feed">
+            </section>
+
+            <section class="pose-info">
+                <div class="pose-header">
+                    <img id="pose-image" class="pose-image" src="/placeholder.svg" alt="Current pose">
+                    <div class="pose-details">
+                        <h2 id="pose-name">Loading...</h2>
+                        <div id="status" class="status active">Detecting pose...</div>
+                    </div>
+                </div>
+
+                <div class="timer" id="timer">0.0s</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p>Progress: <span id="progress-text">0%</span></p>
+                </div>
+
+                <div class="pose-description" id="pose-description">
+                    Loading pose description...
+                </div>
+
+                <div class="completed-poses" id="completed-poses"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/get_status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update pose information
+                    if (data.current_pose) {
+                        document.getElementById('pose-name').textContent = data.current_pose.replace(/_/g, ' ');
+                        document.getElementById('pose-image').src = data.current_pose_image;
+                        document.getElementById('pose-description').textContent = data.pose_description;
+                    }
+
+                    // Update timer
+                    document.getElementById('timer').textContent = `${data.time_left.toFixed(1)}s`;
+
+                    // Update progress
+                    document.getElementById('progress-fill').style.width = `${data.progress}%`;
+                    document.getElementById('progress-text').textContent = `${data.progress}%`;
+
+                    // Update status
+                    const status = document.getElementById('status');
+                    if (data.is_paused) {
+                        status.textContent = 'Pose Lost - Realigning';
+                        status.className = 'status paused';
+                    } else {
+                        status.textContent = 'Pose Detected';
+                        status.className = 'status active';
+                    }
+
+                    // Update completed poses
+                    const completedPosesContainer = document.getElementById('completed-poses');
+                    completedPosesContainer.innerHTML = data.completed_poses
+                        .map(pose => `<span class="pose-chip">${pose.replace(/_/g, ' ')}</span>`)
+                        .join('');
+
+                    // Check if session is completed
+                    if (data.is_completed) {
+                        document.getElementById('pose-name').textContent = 'Session Completed!';
+                        document.getElementById('pose-description').textContent = 'Great job! You\'ve completed all poses.';
+                        return;
+                    }
+
+                    // Continue updating if not completed
+                    setTimeout(updateStatus, 100);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    setTimeout(updateStatus, 1000);
+                });
+        }
+
+        // Start updating status when page loads
+        document.addEventListener('DOMContentLoaded', updateStatus);
+    </script>
+</body>
+</html>
+
